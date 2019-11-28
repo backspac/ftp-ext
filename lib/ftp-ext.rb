@@ -1,4 +1,4 @@
-%w(rubygems net/ftp ptools).each do |lib|
+%w(rubygems net/ftp).each do |lib|
   require lib
 end
 
@@ -49,8 +49,8 @@ module Net
         
         if File.file?(local)
           puts "cp #{remote}" if options[:verbose] == true
-          File.binary?(local) ? putbinaryfile(local, remote) : puttextfile(local, remote)
-          
+          binary?(local) ? putbinaryfile(local, remote) : puttextfile(local, remote)
+
         # ignore . and .., but upload other directories
         elsif !f.match(/^\.+$/)
           put_dir(options.merge({ :local => local, :remote => remote }))
@@ -102,8 +102,8 @@ module Net
         if File.file?(local)
           if !remote_file_exists?(remote) || mtime(remote) < File.mtime(local)
             puts "updating #{remote}" if options[:verbose] == true
-            File.binary?(local) ? putbinaryfile(local, remote) : puttextfile(local, remote)
-            
+            binary?(local) ? putbinaryfile(local, remote) : puttextfile(local, remote)
+
           else
             puts "skipping #{remote}" if options[:verbose] == true
           end
@@ -145,6 +145,17 @@ module Net
       end
 
     end
-    
+
+    private
+
+    def binary?(name)
+      File.open name do |f|
+        while (b=f.read(256)) do
+          return true if b["\0"]
+        end
+      end
+      false
+    end
+
   end
 end
